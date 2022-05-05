@@ -1,92 +1,67 @@
-let pessoas = [
-  { nome: "Ana", idade: 18 },
-  { nome: "Maria", idade: 20 },
-  { nome: "José", idade: 17 },
-  { nome: "Marcos", idade: 22 },
-];
-let people = [{ name: "VAZIO", birth_year: "VAZIO" }];
-let currentPage = "https://swapi.dev/api/people";
-let nextPage = null;
-const objTraducao = {
-  name: "Nome",
-  height: "Altura",
-};
+Parse.initialize(
+  "GFjqPA0w6c4es7Bmor5l6AqFti79XWWbJNJAEeoW",
+  "RNJP7VxHQAG9q3kNFG6U6bNyN364P0jLW5wF7pSh"
+);
+Parse.serverURL = "https://parseapi.back4app.com/";
 
-const btFetch = document.getElementById("btFetch");
-const btProxPag = document.getElementById("btProxPag");
-const tabela = document.getElementById("tabela");
-const tabelaFetch = document.getElementById("tabelaFetch");
+let vetPersonagens = [];
+const lista = document.getElementById("lista");
+const inputNome = document.getElementById("inputNome");
+const inputAlbum = document.getElementById("inputAnoCriacao");
+const inputMusica = document.getElementById("inputMusica");
+const inputLancamento = document.getElementById("inputLancamento");
+const btn = document.getElementById("btnInserir");
 
-function exibirTabela() {
-  for (let i = 0; i < pessoas.length; ++i) {
-    const trNode = document.createElement("tr");
-    const tdNode1 = document.createElement("td");
-    const tdNode2 = document.createElement("td");
-    const tdNode3 = document.createElement("td");
-    tdNode1.innerText = i + 1;
-    tdNode2.innerText = pessoas[i].nome;
-    tdNode3.innerText = pessoas[i].idade;
-    trNode.appendChild(tdNode1);
-    trNode.appendChild(tdNode2);
-    trNode.appendChild(tdNode3);
-    tabela.appendChild(trNode);
+function gerarLista() {
+  lista.innerHTML = "";
+  for (let i = 0; i < vetBandas.length; ++i) {
+    const li = document.createElement("li");
+    const txt = document.createTextNode(
+      `Nome: ${vetBandas[i].Nome} || Ano Criacao: ${vetBandas[i].AnoCriacao} || Musica: ${vetBandas[i].Musica}  ||  Lancamento: ${vetBandas[i].Lancamento}`
+    );
+    li.appendChild(txt);
+    lista.appendChild(li);
   }
 }
-function exibirTabelaStarWars() {
-  btProxPag.disabled = nextPage == null;
-  for (let i = 0; i < people.length; ++i) {
-    let str = "";
-    for (let campo in people[i]) {
-      str += `${objTraducao[campo]}: ${people[i][campo]}\n`;
+
+const gerar = async () => {
+  const Bandas = Parse.Object.extend("Bandas");
+  const query = new Parse.Query(Bandas);
+  try {
+    const results = await query.find();
+    vetBandas = [];
+    for (const object of results) {
+      const Nome = object.get("Nome");
+      const AnoCriacao = object.get("AnoCriacao");
+      const Musica = object.get("Musica");
+      const Lancamento = object.get("Lancamento");
+      vetBandas.push({ Nome, AnoCriacao, Musica, Lancamento });
     }
-    const trNode = document.createElement("tr");
-    const tdNode1 = document.createElement("td");
-    const tdNode2 = document.createElement("td");
-    const tdNode3 = document.createElement("td");
-    const tdNode4 = document.createElement("td");
-    const tdNode5 = document.createElement("td");
-    const tdNode6 = document.createElement("td");
-    const tdNode7 = document.createElement("td");
-
-    tdNode1.innerText = people[i].name;
-    tdNode2.innerText = people[i].birth_year;
-    tdNode3.innerText = people[i].height;
-    tdNode4.innerText = people[i].mass;
-    tdNode5.innerText = people[i].hair_color;
-    tdNode6.innerText = people[i].eye_color;
-    tdNode7.innerText = people[i].gender;
-
-    trNode.appendChild(tdNode1);
-    trNode.appendChild(tdNode2);
-    trNode.appendChild(tdNode3);
-    trNode.appendChild(tdNode4);
-    trNode.appendChild(tdNode5);
-    trNode.appendChild(tdNode6);
-    trNode.appendChild(tdNode7);
-
-    tabelaFetch.appendChild(trNode);
+    gerarLista();
+  } catch (error) {
+    console.error("Error while fetching Bandas", error);
   }
-}
-
-const fetchStarWarsPeople = () => {
-  fetch(currentPage)
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      people = data.results;
-      nextPage = data.next;
-      exibirTabelaStarWars();
-    })
-    .catch((err) => {
-      console.log("Erro recebido: ", err);
-    });
 };
 
-const fetchProxPag = () => {
-  currentPage = nextPage;
-  nextPage = null;
-  fetchStarWarsPeople();
+const inserir = async () => {
+  const myNewObject = new Parse.Object("Bandas");
+  myNewObject.set("Nome", inputNome.value);
+  myNewObject.set("AnoCriacao", Number(inputAnoCriacao.value));
+  myNewObject.set("Musica", inputMusica.value);
+  myNewObject.set("Lancamento", inputLancamento.value);
+
+  try {
+    const result = await myNewObject.save();
+    console.log("Bandas created", result);
+    gerar();
+    inputNome.value = "";
+    inputAnoCriacao.value = "";
+    inputLancamento.value = "";
+  } catch (error) {
+    console.error("Error while creating Bandas: ", error);
+  }
 };
 
-exibirTabela();
+gerar();
+
+btn.onclick = inserir;
